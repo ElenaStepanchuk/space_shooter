@@ -5,6 +5,17 @@ const asteroiSize = 50;
 let deadedAsteroid = 0;
 let shootedValueBullet = 0;
 let deadedBoss = 0;
+let deadedSpiceShip = 0;
+const shipSpriteWidth = 60;
+const shipSpriteHeight = 140;
+const bossSpeed = 1;
+let bullets = [];
+let bulletsBoss = [];
+const bulletSpeed = 10;
+let arrayAsteroids = [];
+const audioSpiceShip = new Audio("./audio/spiceShipShoot.mp3");
+const audioBoss = new Audio("./audio/bossShoot.mp3");
+const audioFonMusic = new Audio("../audio/fonMusic.mp3");
 
 const app = new Application({
   width: widthCanvas,
@@ -13,14 +24,11 @@ const app = new Application({
   antialias: true,
 });
 
-app.renderer.backgroundColor = 0x23395d;
-
+// app.renderer.background.color = 0x23395d;
 app.renderer.view.style.position = "absolute";
-
 document.body.appendChild(app.view);
 
 const Graphics = PIXI.Graphics;
-
 const styleText1 = new PIXI.TextStyle({
   fontFamily: "Monserrat",
   FontSize: 32,
@@ -57,24 +65,24 @@ button
   .lineStyle(2, 0xffffff, 1)
   .drawRect(widthCanvas / 2 - 200, heightCanvas / 2 - 50, 400, 100)
   .endFill();
-
 app.stage.addChild(button);
 
 let startGame = new PIXI.Text("START GAME", styleText2);
-
 startGame.x = widthCanvas / 2 - 80;
 startGame.y = heightCanvas / 2 - 20;
 app.stage.addChild(startGame);
 
 button.interactive = true;
+button.buttonMode = true;
 startGame.interactive = true;
+startGame.buttonMode = true;
 
-button.addEventListener("click", function (e) {
+button.on("click", function (e) {
   app.stage.removeChild(button);
   app.stage.removeChild(startGame);
   game();
 });
-startGame.addEventListener("click", function (e) {
+startGame.on("click", function (e) {
   app.stage.removeChild(button);
   app.stage.removeChild(startGame);
   game();
@@ -82,7 +90,50 @@ startGame.addEventListener("click", function (e) {
 
 let endGame = new PIXI.Text(` `, styleText2);
 
+// add timer
+let windowMaxValue = 60;
+let windowMinValue = 0;
+let windowCount = windowMinValue;
+let windowTimer;
+
+let timerText = new PIXI.Text(
+  `Timer: ${windowMaxValue - windowCount} / ${windowMaxValue}`,
+  styleText3
+);
+timerText.x = widthCanvas / 2 - 65;
+timerText.y = 15;
+app.stage.addChild(timerText);
+function windowTimerStop() {
+  clearInterval(windowTimer);
+}
+
+function onwindowTimerComplete() {
+  if (windowCount === windowMaxValue) {
+    windowTimerStop();
+    return;
+  } else {
+    windowCount++;
+    timerText.text = `Timer: ${
+      windowMaxValue - windowCount
+    } / ${windowMaxValue}`;
+    app.stage.addChild(timerText);
+  }
+}
+function windowStartTimer() {
+  windowTimer = setInterval(onwindowTimerComplete, 1000);
+}
+function addingSpiceShip() {
+  const shipSprite = PIXI.Sprite.from("./images/spaceShip.png");
+  app.stage.addChild(shipSprite);
+  shipSprite.width = shipSpriteWidth;
+  shipSprite.height = shipSpriteHeight;
+  shipSprite.x = app.screen.width / 2 - 15;
+  shipSprite.y = 570;
+  shipSprite.interactive = true;
+}
+// start first level/////////////////////////////////////////////
 const game = () => {
+  audioFonMusic.play();
   // add text shooted bullet
   let shootedBullet = new PIXI.Text(
     `Shooted bullet: ${shootedValueBullet} / 10`,
@@ -90,23 +141,18 @@ const game = () => {
   );
   shootedBullet.x = 15;
   shootedBullet.y = 15;
-
   app.stage.addChild(shootedBullet);
 
+  // add text deaded asteroid
   let deadedAsteroidText = new PIXI.Text(
     `Dead asteroid: ${deadedAsteroid} / 7`,
     styleText3
   );
   deadedAsteroidText.x = 1050;
   deadedAsteroidText.y = 15;
-
   app.stage.addChild(deadedAsteroidText);
 
-  let windowMaxValue = 60;
-  let windowMinValue = 0;
-  let windowCount = windowMinValue;
-  let windowTimer;
-
+  //change add text deaded asteroid
   function addDeadedAsteroid() {
     app.stage.removeChild(deadedAsteroidText);
     deadedAsteroidText = new PIXI.Text(
@@ -115,134 +161,65 @@ const game = () => {
     );
     deadedAsteroidText.x = 1050;
     deadedAsteroidText.y = 15;
-
     app.stage.addChild(deadedAsteroidText);
   }
 
-  // add asteroid1
-  const asteroid1Sprite = PIXI.Sprite.from("./images/asteroid.png");
-  app.stage.addChild(asteroid1Sprite);
+  // create array width asteroids
+  // let arrayAsteroids = [];
+  for (let i = 0; i < 7; i++) {
+    const asteroid = PIXI.Sprite.from("./images/asteroid.png");
+    arrayAsteroids.push(asteroid);
+    app.stage.addChild(arrayAsteroids[i]);
+    arrayAsteroids[i].width = asteroiSize;
+    arrayAsteroids[i].height = asteroiSize;
+    arrayAsteroids[i].interactive = true;
+  }
 
-  asteroid1Sprite.width = asteroiSize;
-  asteroid1Sprite.height = asteroiSize;
-  asteroid1Sprite.x = 50;
-  asteroid1Sprite.y = 130;
-  asteroid1Sprite.interactive = true;
-
-  // add asteroid2
-  const asteroid2Sprite = PIXI.Sprite.from("./images/asteroid.png");
-  app.stage.addChild(asteroid2Sprite);
-
-  asteroid2Sprite.width = asteroiSize;
-  asteroid2Sprite.height = asteroiSize;
-  asteroid2Sprite.x = 250;
-  asteroid2Sprite.y = 80;
-
-  // add asteroid3
-  const asteroid3Sprite = PIXI.Sprite.from("./images/asteroid.png");
-  app.stage.addChild(asteroid3Sprite);
-
-  asteroid3Sprite.width = asteroiSize;
-  asteroid3Sprite.height = asteroiSize;
-  asteroid3Sprite.x = 500;
-  asteroid3Sprite.y = 180;
-
-  // add asteroid4
-  const asteroid4Sprite = PIXI.Sprite.from("./images/asteroid.png");
-  app.stage.addChild(asteroid4Sprite);
-
-  asteroid4Sprite.width = asteroiSize;
-  asteroid4Sprite.height = asteroiSize;
-  asteroid4Sprite.x = 680;
-  asteroid4Sprite.y = 280;
-
-  // add asteroid5
-  const asteroid5Sprite = PIXI.Sprite.from("./images/asteroid.png");
-  app.stage.addChild(asteroid5Sprite);
-
-  asteroid5Sprite.width = asteroiSize;
-  asteroid5Sprite.height = asteroiSize;
-  asteroid5Sprite.x = 880;
-  asteroid5Sprite.y = 100;
-
-  // add asteroid6
-  const asteroid6Sprite = PIXI.Sprite.from("./images/asteroid.png");
-  app.stage.addChild(asteroid6Sprite);
-
-  asteroid6Sprite.width = asteroiSize;
-  asteroid6Sprite.height = asteroiSize;
-  asteroid6Sprite.x = 940;
-  asteroid6Sprite.y = 70;
-
-  // add asteroid7
-  const asteroid7Sprite = PIXI.Sprite.from("./images/asteroid.png");
-  app.stage.addChild(asteroid7Sprite);
-
-  asteroid7Sprite.width = asteroiSize;
-  asteroid7Sprite.height = asteroiSize;
-  asteroid7Sprite.x = 1140;
-  asteroid7Sprite.y = 220;
+  // add asteroids coordinates
+  arrayAsteroids[0].x = 50;
+  arrayAsteroids[0].y = 130;
+  arrayAsteroids[1].x = 250;
+  arrayAsteroids[1].y = 80;
+  arrayAsteroids[2].x = 500;
+  arrayAsteroids[2].y = 180;
+  arrayAsteroids[3].x = 680;
+  arrayAsteroids[3].y = 280;
+  arrayAsteroids[4].x = 880;
+  arrayAsteroids[4].y = 100;
+  arrayAsteroids[5].x = 940;
+  arrayAsteroids[5].y = 70;
+  arrayAsteroids[6].x = 1140;
+  arrayAsteroids[6].y = 220;
 
   // add spiceShip
   const shipSprite = PIXI.Sprite.from("./images/spaceShip.png");
   app.stage.addChild(shipSprite);
-
-  shipSprite.width = 60;
-  shipSprite.height = 140;
+  shipSprite.width = shipSpriteWidth;
+  shipSprite.height = shipSpriteHeight;
   shipSprite.x = app.screen.width / 2 - 15;
   shipSprite.y = 570;
-
   shipSprite.interactive = true;
 
-  // add timer
-
-  let timerText = new PIXI.Text(
-    `Timer: ${windowCount} / ${windowMaxValue}`,
-    styleText3
-  );
-  timerText.x = widthCanvas / 2 - 65;
-  timerText.y = 15;
-  app.stage.addChild(timerText);
-
-  function windowTimerStop() {
-    clearInterval(windowTimer);
-  }
-
-  function onwindowTimerComplete() {
-    if (windowCount === windowMaxValue) {
-      windowTimerStop();
-      looseGame();
-      return;
-    } else {
-      windowCount++;
-      timerText.text = `Timer: ${windowCount} / ${windowMaxValue}`;
-      app.stage.addChild(timerText);
-    }
-  }
-  function windowStartTimer() {
-    windowTimer = setInterval(onwindowTimerComplete, 1000);
-  }
-
+  // start timer
   windowStartTimer();
 
-  // add bullet
-  let bullets = [];
-  const bulletSpeed = 10;
   app.ticker.add(gameLoop);
 
   function winGame() {
     if (deadedAsteroid === 7) {
-      endGame.text = "YOU   WIN";
-      endGame.x = widthCanvas / 2 - 60;
-      endGame.y = heightCanvas / 2;
-      app.stage.removeChild(shipSprite);
-      app.stage.removeChild(shootedBullet);
       app.stage.removeChild(deadedAsteroidText);
-      app.stage.removeChild(timerText);
-      app.stage.addChild(endGame);
-      windowTimerStop();
+      windowCount = 0;
+      app.stage.removeChild(shootedBullet);
+      document.removeEventListener("keydown", controlButton);
+      app.ticker.remove(gameLoop);
+      gameBoss();
+      app.stage.removeChild(shipSprite);
+      app.stage.removeChild(arrayAsteroids);
+      timerText.x = widthCanvas / 2 - 165;
+      timerText.y = 15;
     }
   }
+
   function looseGame() {
     if (
       (shootedValueBullet === 10 && deadedAsteroid < 7) ||
@@ -251,21 +228,17 @@ const game = () => {
       endGame.text = "YOU   LOOSE";
       endGame.x = widthCanvas / 2 - 60;
       endGame.y = heightCanvas / 2;
+      arrayAsteroids.forEach((asteroid) => {
+        app.stage.removeChild(asteroid);
+      });
       app.stage.removeChild(shipSprite);
-      app.stage.removeChild(asteroid1Sprite);
-      app.stage.removeChild(asteroid2Sprite);
-      app.stage.removeChild(asteroid3Sprite);
-      app.stage.removeChild(asteroid4Sprite);
-      app.stage.removeChild(asteroid5Sprite);
-      app.stage.removeChild(asteroid6Sprite);
-      app.stage.removeChild(asteroid7Sprite);
       app.stage.addChild(endGame);
       windowTimerStop();
       return;
     }
   }
 
-  // shoot
+  // shoot on asteroid
   function shoot() {
     if (
       deadedAsteroid === 7 ||
@@ -298,6 +271,7 @@ const game = () => {
 
   function updateBullets(delta) {
     winGame();
+    looseGame();
     for (let i = 0; i < bullets.length; i++) {
       bullets[i].position.y -= bullets[i].speed;
       if (bullets[i].position.y < 20) {
@@ -311,129 +285,53 @@ const game = () => {
       }
     }
 
-    //contact test bullet with asteroid1
-    for (let i = 0; i < bullets.length; i++) {
-      if (
-        bullets[i].x < asteroid1Sprite.x + asteroid1Sprite.width - 20 &&
-        bullets[i].x + asteroid1Sprite.width - 15 > asteroid1Sprite.x &&
-        bullets[i].y < asteroid1Sprite.y + asteroid1Sprite.height &&
-        bullets[i].y + asteroid1Sprite.height > asteroid1Sprite.y
-      ) {
-        app.stage.removeChild(bullets[i]);
-        bullets.splice(i, 1);
-        app.stage.removeChild(asteroid1Sprite);
-        asteroid1Sprite.y = -150;
-        deadedAsteroid = deadedAsteroid + 1;
-        addDeadedAsteroid();
+    //contact test bullet with asteroids
+    arrayAsteroids.forEach((asteroid) => {
+      for (let i = 0; i < bullets.length; i++) {
+        if (
+          bullets[i].x < asteroid.x + asteroid.width - 20 &&
+          bullets[i].x + asteroid.width - 15 > asteroid.x &&
+          bullets[i].y < asteroid.y + asteroid.height &&
+          bullets[i].y + asteroid.height > asteroid.y
+        ) {
+          app.stage.removeChild(bullets[i]);
+          bullets.splice(i, 1);
+          app.stage.removeChild(asteroid);
+          asteroid.y = -150;
+          deadedAsteroid = deadedAsteroid + 1;
+          addDeadedAsteroid();
+        }
+      }
+    });
+  }
+
+  // moving asteroids
+  function moveAsteroid(delta) {
+    for (let i = 0; i < arrayAsteroids.length; i = i + 2) {
+      arrayAsteroids[i].y += 1;
+      arrayAsteroids[i].x += 1;
+
+      if (arrayAsteroids[i].y > heightCanvas - shipSpriteHeight - 100) {
+        return (arrayAsteroids[i].y = 50);
+      } else if (arrayAsteroids[i].x > widthCanvas - 50) {
+        return (arrayAsteroids[i].x = 50);
       }
     }
-
-    //contact test bullet with asteroid2
-    for (let i = 0; i < bullets.length; i++) {
-      if (
-        bullets[i].x < asteroid2Sprite.x + asteroid2Sprite.width - 20 &&
-        bullets[i].x + asteroid2Sprite.width - 15 > asteroid2Sprite.x &&
-        bullets[i].y < asteroid2Sprite.y + asteroid2Sprite.height &&
-        bullets[i].y + asteroid2Sprite.height > asteroid2Sprite.y
-      ) {
-        app.stage.removeChild(bullets[i]);
-        bullets.splice(i, 1);
-        app.stage.removeChild(asteroid2Sprite);
-        asteroid2Sprite.y = -150;
-        deadedAsteroid = deadedAsteroid + 1;
-        addDeadedAsteroid();
+    for (let i = 1; i < arrayAsteroids.length; i = i + 2) {
+      arrayAsteroids[i].y += 1;
+      arrayAsteroids[i].x -= 1;
+      if (arrayAsteroids[i].y > heightCanvas - shipSpriteHeight - 100) {
+        return (arrayAsteroids[i].y = 60);
       }
-    }
-
-    //contact test bullet with asteroid3
-    for (let i = 0; i < bullets.length; i++) {
-      if (
-        bullets[i].x < asteroid3Sprite.x + asteroid3Sprite.width - 20 &&
-        bullets[i].x + asteroid3Sprite.width - 15 > asteroid3Sprite.x &&
-        bullets[i].y < asteroid3Sprite.y + asteroid3Sprite.height &&
-        bullets[i].y + asteroid3Sprite.height > asteroid3Sprite.y
-      ) {
-        app.stage.removeChild(bullets[i]);
-        bullets.splice(i, 1);
-        app.stage.removeChild(asteroid3Sprite);
-        asteroid3Sprite.y = -150;
-        deadedAsteroid = deadedAsteroid + 1;
-        addDeadedAsteroid();
-      }
-    }
-
-    //contact test bullet with asteroid4
-    for (let i = 0; i < bullets.length; i++) {
-      if (
-        bullets[i].x < asteroid4Sprite.x + asteroid4Sprite.width - 20 &&
-        bullets[i].x + asteroid4Sprite.width - 15 > asteroid4Sprite.x &&
-        bullets[i].y < asteroid4Sprite.y + asteroid4Sprite.height &&
-        bullets[i].y + asteroid4Sprite.height > asteroid4Sprite.y
-      ) {
-        app.stage.removeChild(bullets[i]);
-        bullets.splice(i, 1);
-        app.stage.removeChild(asteroid4Sprite);
-        asteroid4Sprite.y = -150;
-        deadedAsteroid = deadedAsteroid + 1;
-        addDeadedAsteroid();
-      }
-    }
-
-    //contact test bullet with asteroid5
-    for (let i = 0; i < bullets.length; i++) {
-      if (
-        bullets[i].x < asteroid5Sprite.x + asteroid5Sprite.width - 20 &&
-        bullets[i].x + asteroid5Sprite.width - 15 > asteroid5Sprite.x &&
-        bullets[i].y < asteroid5Sprite.y + asteroid5Sprite.height &&
-        bullets[i].y + asteroid5Sprite.height > asteroid5Sprite.y
-      ) {
-        app.stage.removeChild(bullets[i]);
-        bullets.splice(i, 1);
-        app.stage.removeChild(asteroid5Sprite);
-        asteroid5Sprite.y = -150;
-        deadedAsteroid = deadedAsteroid + 1;
-        addDeadedAsteroid();
-      }
-    }
-
-    //contact test bullet with asteroid6
-    for (let i = 0; i < bullets.length; i++) {
-      if (
-        bullets[i].x < asteroid6Sprite.x + asteroid6Sprite.width - 20 &&
-        bullets[i].x + asteroid6Sprite.width - 15 > asteroid6Sprite.x &&
-        bullets[i].y < asteroid6Sprite.y + asteroid6Sprite.height &&
-        bullets[i].y + asteroid6Sprite.height > asteroid6Sprite.y
-      ) {
-        app.stage.removeChild(bullets[i]);
-        bullets.splice(i, 1);
-        app.stage.removeChild(asteroid6Sprite);
-        asteroid6Sprite.y = -150;
-        deadedAsteroid = deadedAsteroid + 1;
-        addDeadedAsteroid();
-      }
-    }
-
-    //contact test bullet with asteroid7
-    for (let i = 0; i < bullets.length; i++) {
-      if (
-        bullets[i].x < asteroid7Sprite.x + asteroid7Sprite.width - 20 &&
-        bullets[i].x + asteroid7Sprite.width - 15 > asteroid7Sprite.x &&
-        bullets[i].y < asteroid7Sprite.y + asteroid7Sprite.height &&
-        bullets[i].y + asteroid7Sprite.height > asteroid7Sprite.y
-      ) {
-        app.stage.removeChild(bullets[i]);
-        bullets.splice(i, 1);
-        app.stage.removeChild(asteroid7Sprite);
-        asteroid7Sprite.y = -150;
-        deadedAsteroid = deadedAsteroid + 1;
-        addDeadedAsteroid();
-        return;
+      if (arrayAsteroids[i].x < 0) {
+        return (arrayAsteroids[i].x = widthCanvas - 50);
       }
     }
   }
 
   function gameLoop(delta) {
     updateBullets(delta);
+    moveAsteroid(delta);
   }
   function controlButton(e) {
     if (
@@ -446,10 +344,383 @@ const game = () => {
       shipSprite.x -= 15;
     }
     if (e.key === " ") {
-      looseGame();
+      audioSpiceShip.play();
       shoot();
     }
   }
 
   document.addEventListener("keydown", controlButton);
 };
+
+// Level 2 width boss/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+function gameBoss() {
+  // add text shooted bullet
+  shootedValueBullet = 0;
+  let shootedBullet = new PIXI.Text(
+    `Shooted bullet: ${shootedValueBullet} / 10`,
+    styleText1
+  );
+  shootedBullet.x = 15;
+  shootedBullet.y = 15;
+  app.stage.addChild(shootedBullet);
+
+  // add boss HP scale
+  deadedBossTextHp = new PIXI.Text(`HP BOSS:  `, styleText3);
+  deadedBossTextHp.x = 850;
+  deadedBossTextHp.y = 15;
+  app.stage.addChild(deadedBossTextHp);
+  let deadedBossHp = new Graphics();
+  deadedBossHp.lineStyle(10, 0xff0000, 1).moveTo(1000, 35).lineTo(1200, 35);
+  app.stage.addChild(deadedBossHp);
+
+  function addDeadedBoss() {
+    if (deadedBoss === 1) {
+      let deadedBossHpWin = new Graphics();
+      deadedBossHpWin
+        .lineStyle(10, 0x00ff00, 1)
+        .moveTo(1000, 35)
+        .lineTo(1050, 35);
+      app.stage.addChild(deadedBossHpWin);
+    } else if (deadedBoss === 2) {
+      let deadedBossHpWin1 = new Graphics();
+      deadedBossHpWin1
+        .lineStyle(10, 0x00ff00, 1)
+        .moveTo(1000, 35)
+        .lineTo(1100, 35);
+      app.stage.addChild(deadedBossHpWin1);
+    } else if (deadedBoss === 3) {
+      let deadedBossHpWin2 = new Graphics();
+      deadedBossHpWin2
+        .lineStyle(10, 0x00ff00, 1)
+        .moveTo(1000, 35)
+        .lineTo(1150, 35);
+      app.stage.addChild(deadedBossHpWin2);
+    }
+    if (deadedBoss === 4) {
+      let deadedBossHpWin3 = new Graphics();
+      deadedBossHpWin3
+        .lineStyle(10, 0x00ff00, 1)
+        .moveTo(1000, 35)
+        .lineTo(1200, 35);
+      app.stage.addChild(deadedBossHpWin3);
+    }
+  }
+
+  // add boss
+  const bossSprite = PIXI.Sprite.from("./images/spaceShipBoss.png");
+  app.stage.addChild(bossSprite);
+  bossSprite.width = 120;
+  bossSprite.height = 180;
+  bossSprite.x = 0;
+  bossSprite.y = 80;
+  bossSprite.interactive = true;
+
+  // add timer for boss
+  app.ticker.add((delta) => addBossSpeed(delta));
+
+  function addBossSpeed() {
+    addDeadedBoss();
+    looseBossGame();
+    if (windowCount < 9) {
+      bossSprite.x += bossSpeed;
+      return;
+    }
+    addBossSpeed2();
+    return;
+  }
+  function addBossSpeed2() {
+    if (windowCount > 10 && windowCount < 15) {
+      bossSprite.x -= bossSpeed * 2;
+      return;
+    }
+    addBossSpeed3();
+    return;
+  }
+  function addBossSpeed3() {
+    if (windowCount > 16 && windowCount < 19) {
+      bossSprite.x += bossSpeed * 3;
+      return;
+    }
+    addBossSpeed4();
+    return;
+  }
+  function addBossSpeed4() {
+    if (windowCount > 20 && windowCount < 24) {
+      bossSprite.x -= bossSpeed * 2;
+      return;
+    }
+    addBossSpeed5();
+    return;
+  }
+  function addBossSpeed5() {
+    if (windowCount > 25 && windowCount < 34) {
+      bossSprite.x += bossSpeed;
+      return;
+    }
+    addBossSpeed6();
+    return;
+  }
+  function addBossSpeed6() {
+    if (windowCount > 35 && windowCount < 40) {
+      bossSprite.x -= bossSpeed * 2;
+      return;
+    }
+    addBossSpeed7();
+    return;
+  }
+  function addBossSpeed7() {
+    if (windowCount > 41 && windowCount < 48) {
+      bossSprite.x += bossSpeed;
+      return;
+    }
+    addBossSpeed8();
+    return;
+  }
+  function addBossSpeed8() {
+    if (windowCount > 49 && windowCount < 56) {
+      bossSprite.x -= bossSpeed;
+      return;
+    }
+    addBossSpeed9();
+    return;
+  }
+  function addBossSpeed9() {
+    if (windowCount > 57 && windowCount < 60) {
+      bossSprite.x += bossSpeed;
+      timerShoot();
+      return;
+    }
+    return;
+  }
+  addBossSpeed();
+
+  // add spiceShip
+  const shipSprite = PIXI.Sprite.from("./images/spaceShip.png");
+  app.stage.addChild(shipSprite);
+  shipSprite.width = shipSpriteWidth;
+  shipSprite.height = shipSpriteHeight;
+  shipSprite.x = app.screen.width / 2 - 15;
+  shipSprite.y = 570;
+  shipSprite.interactive = true;
+
+  // add bullet
+  function winGame() {
+    if (deadedBoss === 4) {
+      endGame.text = "YOU   WIN";
+      endGame.x = widthCanvas / 2 - 60;
+      endGame.y = heightCanvas / 2;
+      app.stage.removeChild(shipSprite);
+      app.stage.addChild(endGame);
+      windowTimerStop();
+      app.stage.removeChild(bossSprite);
+      bossSprite.y = -150;
+      app.stage.removeChild(bulletsBoss);
+      document.removeEventListener("keydown", controlButton);
+      return;
+    }
+  }
+  function looseBossGame() {
+    if (
+      (shootedValueBullet === 10 && deadedBoss < 4) ||
+      windowCount === windowMaxValue ||
+      deadedSpiceShip === 1
+    ) {
+      endGame.text = "YOU   LOOSE";
+      endGame.x = widthCanvas / 2 - 60;
+      endGame.y = heightCanvas / 2;
+      app.stage.removeChild(shipSprite);
+      app.stage.removeChild(bossSprite);
+      app.stage.removeChild(bulletsBoss);
+      app.stage.removeChild(bullets);
+      app.stage.addChild(endGame);
+      windowTimerStop();
+      return;
+    }
+  }
+
+  // shoot
+  function shoot() {
+    // ?
+    if (
+      deadedBoss === 4 ||
+      (shootedValueBullet === 10 && deadedBoss < 4) ||
+      deadedSpiceShip === 1
+    ) {
+      return;
+    }
+    let bullet = createBullet();
+    bullets.push(bullet);
+    shootedValueBullet = shootedValueBullet + 1;
+    app.stage.removeChild(shootedBullet);
+    shootedBullet = new PIXI.Text(
+      `Shooted bullet: ${shootedValueBullet} / 10`,
+      styleText1
+    );
+    app.stage.addChild(shootedBullet);
+    shootedBullet.x = 15;
+    shootedBullet.y = 15;
+  }
+
+  function createBullet() {
+    let bullet = new Graphics();
+    bullet.lineStyle(5, 0xffea00, 1).moveTo(30, -20).lineTo(30, 0);
+    bullet.x = shipSprite.x;
+    bullet.y = shipSprite.y;
+    bullet.speed = bulletSpeed;
+    app.stage.addChild(bullet);
+    return bullet;
+  }
+
+  function updateBullets(delta) {
+    winGame();
+    looseBossGame();
+    // bullets spiceShip
+    for (let i = 0; i < bullets.length; i++) {
+      bullets[i].position.y -= bullets[i].speed;
+      if (bullets[i].position.y < 20) {
+        bullets[i].dead = true;
+      }
+    }
+    for (let i = 0; i < bullets.length; i++) {
+      if (bullets[i].dead) {
+        app.stage.removeChild(bullets[i]);
+        bullets.splice(i, 1);
+      }
+    }
+
+    // bullets boss
+    for (let i = 0; i < bulletsBoss.length; i++) {
+      bulletsBoss[i].position.y += bulletsBoss[i].speed;
+      if (bulletsBoss[i].position.y > 720) {
+        bulletsBoss[i].dead = true;
+      }
+    }
+    for (let i = 0; i < bulletsBoss.length; i++) {
+      if (bulletsBoss[i].dead) {
+        app.stage.removeChild(bulletsBoss[i]);
+        bulletsBoss.splice(i, 1);
+      }
+    }
+    // contact test bullet spiceShip with boss
+    for (let i = 0; i < bullets.length; i++) {
+      if (
+        bullets[i].x < bossSprite.x + bossSprite.width - 45 &&
+        bullets[i].x + bossSprite.width - 100 > bossSprite.x &&
+        bullets[i].y < bossSprite.y + bossSprite.height &&
+        bullets[i].y + bossSprite.height > bossSprite.y
+      ) {
+        app.stage.removeChild(bullets[i]);
+        bullets.splice(i, 1);
+        deadedBoss = deadedBoss + 1;
+      }
+    }
+
+    // contact test bulletBoss with spiceSheep
+    for (let i = 0; i < bulletsBoss.length; i++) {
+      if (
+        bulletsBoss[i].x < shipSprite.x + shipSprite.width - 20 &&
+        bulletsBoss[i].x + shipSprite.width - 30 > shipSprite.x &&
+        bulletsBoss[i].y < shipSprite.y + shipSprite.height &&
+        bulletsBoss[i].y + shipSprite.height > shipSprite.y
+      ) {
+        app.stage.removeChild(bulletsBoss[i]);
+        bulletsBoss.splice(i, 1);
+        deadedSpiceShip = deadedSpiceShip + 1;
+      }
+    }
+
+    // contact ballet boss width bullet spiceShip
+    for (let i = 0; i < bullets.length; i++) {
+      bulletsBoss.forEach((bulletBoss) => {
+        if (
+          bulletBoss.x < bullets[i].x + 5 &&
+          bulletBoss.x + bullets[i].x > 5 &&
+          bulletBoss.y == bullets[i].y - 120
+        ) {
+          app.stage.removeChild(bullets[i]);
+          app.stage.removeChild(bulletBoss);
+        }
+      });
+    }
+  }
+
+  // shoot boss
+  let shootedValueBulletBoss = 0;
+  function shootBoss() {
+    if (
+      deadedBoss === 4 ||
+      (shootedValueBullet === 10 && deadedBoss < 4) ||
+      deadedSpiceShip === 1
+    ) {
+      return;
+    }
+    let bulletBoss = createBulletBoss();
+    bulletsBoss.push(bulletBoss);
+    shootedValueBulletBoss = shootedValueBulletBoss + 1;
+    audioBoss.play();
+  }
+
+  function createBulletBoss() {
+    let bulletBoss = new Graphics();
+    bulletBoss.lineStyle(5, 0xffea00, 1).moveTo(60, 140).lineTo(60, 170);
+    bulletBoss.x = bossSprite.x;
+    bulletBoss.y = bossSprite.y;
+    bulletBoss.speed = bulletSpeed;
+    app.stage.addChild(bulletBoss);
+    return bulletBoss;
+  }
+
+  function timerShoot() {
+    if (windowCount % 2 === 0 && windowCount < windowMaxValue) {
+      shootBoss();
+    }
+    return;
+  }
+
+  function gameLoop(delta) {
+    updateBullets(delta);
+    addBossSpeed(delta);
+  }
+
+  app.ticker.add(gameLoop);
+
+  let maxValue = 60;
+  let count = 0;
+  let timer;
+  function timerStop() {
+    clearInterval(timer);
+  }
+
+  function timerComplete() {
+    if (count === maxValue) {
+      timerStop();
+      looseBossGame();
+      return;
+    } else {
+      count++;
+      timerShoot();
+    }
+  }
+  function startTimer() {
+    timer = setInterval(timerComplete, 2000);
+  }
+  startTimer();
+
+  function controlButton(e) {
+    if (
+      e.key === "ArrowRight" &&
+      shipSprite.x < widthCanvas - shipSprite.width
+    ) {
+      shipSprite.x += 15;
+    }
+    if (e.key === "ArrowLeft" && shipSprite.x > 0) {
+      shipSprite.x -= 15;
+    }
+    if (e.key === " ") {
+      shoot();
+      audioSpiceShip.play();
+    }
+  }
+
+  document.addEventListener("keydown", controlButton);
+}
